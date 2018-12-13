@@ -20,14 +20,14 @@ class Cell(object):
 	def __resetNFA(self):
 		self.no_food_alive = self.no_food_alive_backup
 	
-	def progress(self, tick, food):
+	def progress(self, tick, food, isRoom):
 		# print("Cell: " + str(self.cell_id) + " Simulated progression on tick " + str(tick) + " with food "+ str(food))
 		
 		food_required = 2
 		food_gen = 0.1
 		
 		if food - food_required >=0:
-			if self.mitosis_countdown < 1:
+			if self.mitosis_countdown < 1 and isRoom:
 				self.__resetNFA()
 				self.mitosis_countdown = self.mitosis_countdown_legnth
 				return [food - food_required, self.alive, True]

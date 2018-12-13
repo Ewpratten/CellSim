@@ -1,8 +1,7 @@
 import sys
 import cell as celllib
 import termplot
-# from bashplotlib.histogram import plot_hist
-# import gnuplotlib as gp
+import csv
 
 def printOnLine(string):
 	print(string)
@@ -18,6 +17,7 @@ starting_cells = int(sys.argv[2])
 food = int(sys.argv[1])
 precent_interphase = int(sys.argv[3])
 precent_mitosis = 100 - precent_interphase
+max_cells = 100
 
 alive_cells = []
 
@@ -31,12 +31,17 @@ i += 1
 print(str(len(alive_cells)) + " Cells have been created...\nStarting simulation")
 
 alive_graph = []
+csv_data = []
 
 time = 0
 while len(alive_cells) - 1:
+	isRoom = True if len(alive_cells) <= max_cells else False
+	# save data about current iteration
 	alive_graph.append(int(len(alive_cells)) + 100)
+	csv_data.append([time, len(alive_cells), food])
+	
 	for cell in alive_cells:
-		celldata = cell.progress(time, food)
+		celldata = cell.progress(time, food, isRoom)
 		food = celldata[0]
 		if not celldata[1]:
 			alive_cells.pop()
@@ -48,9 +53,48 @@ while len(alive_cells) - 1:
 			i += 1
 
 	time += 1
+	max_cells +=  2
+	print(f"Alive: {len(alive_cells)} | Max: {max_cells}", end="\r")
 
 print("The cells lasted for " + str(time) + " units of time")
 # print(alive_graph)
 
 print("Cells Over Time:")
 termplot.plot(alive_graph)
+
+print("Exporting CSV for Graphing")
+with open("./csv/output-graphing.csv", "w") as outfile:
+	writer = csv.writer(outfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+	for iteration in csv_data:
+		writer.writerow(iteration[1:])
+
+print("Exporting Normal CSV")
+with open("./csv/output.csv", "w") as outfile:
+	writer = csv.writer(outfile, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+	for iteration in csv_data:
+		writer.writerow(iteration)
+
+print("Generating MatPlotLib Graph")
+import matplotlib
+matplotlib.use("agg")
+from matplotlib import pyplot as plt
+from matplotlib import style
+
+from numpy import genfromtxt
+
+# with open("./output.csv", 'r') as f:
+# 	num_cols = len(f.readline().split())
+# 	f.seek(0)
+# 	data = genfromtxt(f, usecols = range(2,num_cols), delimiter=',')
+data = genfromtxt('./csv/output-graphing.csv',delimiter=',')
+
+plt.plot(data)
+
+plt.title('Cell Generation Data')
+plt.ylabel('Y axis')
+plt.xlabel('Time (Hours)')
+
+plt.savefig("output.png")
+
+print("Done!")
+exit(0)
